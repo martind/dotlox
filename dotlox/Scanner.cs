@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 
-namespace dotlox {
-    public class Scanner {
+namespace dotlox
+{
+    public class Scanner
+    {
         private static readonly IDictionary<string, TokenType> keywords = new Dictionary<string, TokenType> {
             { "and", TokenType.AND },
             { "class", TokenType.CLASS },
@@ -28,12 +30,15 @@ namespace dotlox {
         private int current = 0;
         private int line = 1;
 
-        public Scanner(string source) {
+        public Scanner(string source)
+        {
             this.source = source;
         }
 
-        public IEnumerable<Token> ScanTokens() {
-            while (!IsAtEnd()) {
+        public IEnumerable<Token> ScanTokens()
+        {
+            while (!IsAtEnd())
+            {
                 start = current;
                 ScanToken();
             }
@@ -44,10 +49,12 @@ namespace dotlox {
 
         private bool IsAtEnd() => current >= source.Length;
 
-        private void ScanToken() {
+        private void ScanToken()
+        {
             var ch = Advance();
 
-            switch (ch) {
+            switch (ch)
+            {
                 case '(': AddToken(TokenType.LEFT_PAREN); break;
                 case ')': AddToken(TokenType.RIGHT_PAREN); break;
                 case '{': AddToken(TokenType.LEFT_BRACE); break;
@@ -63,23 +70,29 @@ namespace dotlox {
                 case '<': AddToken(Match('=') ? TokenType.LESS_EQUAL : TokenType.LESS); break;
                 case '>': AddToken(Match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER); break;
                 case '/':
-                    if (Match('/')) {
+                    if (Match('/'))
+                    {
                         while (Peek() != '\n' && !IsAtEnd()) Advance();
                     }
-                    else if (Match('*')) {
-                        while (!IsAtEnd()) { 
-                            if (Peek() == '*' && PeekNext() == '/') {
+                    else if (Match('*'))
+                    {
+                        while (!IsAtEnd())
+                        {
+                            if (Peek() == '*' && PeekNext() == '/')
+                            {
                                 Advance(); // consume *
                                 Advance(); // consume /
                                 break;
                             }
-                            if (Peek() == '\n') {
+                            if (Peek() == '\n')
+                            {
                                 line++;
                             }
                             Advance();
                         }
                     }
-                    else {
+                    else
+                    {
                         AddToken(TokenType.SLASH);
                     }
                     break;
@@ -93,13 +106,16 @@ namespace dotlox {
                 case '"': String(); break;
 
                 default:
-                    if (IsDigit(ch)) {
+                    if (IsDigit(ch))
+                    {
                         Number();
                     }
-                    else if (IsAlpha(ch)) {
+                    else if (IsAlpha(ch))
+                    {
                         Identifier();
                     }
-                    else {
+                    else
+                    {
                         DotLox.Error(line, "Unexpected character.");
                     }
 
@@ -107,23 +123,28 @@ namespace dotlox {
             }
         }
 
-        private char Advance() {
+        private char Advance()
+        {
             current++;
             return source[current - 1];
         }
 
-        private char Peek() {
+        private char Peek()
+        {
             if (IsAtEnd()) return '\0';
             return source[current];
         }
 
-        private char PeekNext() {
+        private char PeekNext()
+        {
             if (current + 1 >= source.Length) return '\0';
             return source[current + 1];
         }
 
-        private bool Match(char expected) {
-            if (IsAtEnd() || source[current] != expected) {
+        private bool Match(char expected)
+        {
+            if (IsAtEnd() || source[current] != expected)
+            {
                 return false;
             }
 
@@ -131,18 +152,22 @@ namespace dotlox {
             return true;
         }
 
-        private void AddToken(TokenType type, object literal = null) {
+        private void AddToken(TokenType type, object literal = null)
+        {
             var text = source.Substring(start, current - start);
             tokens.Add(new Token(type, text, literal, line));
         }
 
-        private void String() {
-            while (Peek() != '"' && !IsAtEnd()) {
+        private void String()
+        {
+            while (Peek() != '"' && !IsAtEnd())
+            {
                 if (Peek() == '\n') line++;
                 Advance();
             }
 
-            if (IsAtEnd()) {
+            if (IsAtEnd())
+            {
                 DotLox.Error(line, "Unclosed string");
                 return;
             }
@@ -155,12 +180,14 @@ namespace dotlox {
 
         private bool IsDigit(char c) => c >= '0' && c <= '9';
 
-        private void Number() {
+        private void Number()
+        {
             while (IsDigit(Peek())) Advance();
 
-            if (Peek() == '.' && IsDigit(PeekNext())) {
+            if (Peek() == '.' && IsDigit(PeekNext()))
+            {
                 Advance(); // consume the .
-                
+
                 while (IsDigit(Peek())) Advance();
             }
 
@@ -173,16 +200,19 @@ namespace dotlox {
                                          c == '_';
 
         private bool IsAlphanumeric(char c) => IsAlpha(c) || IsDigit(c);
-        
-        private void Identifier() {
+
+        private void Identifier()
+        {
             while (IsAlphanumeric(Peek())) Advance();
 
             var text = source.Substring(start, current - start);
 
-            if (keywords.TryGetValue(text, out TokenType type)) {
+            if (keywords.TryGetValue(text, out TokenType type))
+            {
                 AddToken(type);
             }
-            else {
+            else
+            {
                 AddToken(TokenType.IDENTIFIER, text);
             }
         }
